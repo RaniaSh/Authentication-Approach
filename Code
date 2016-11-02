@@ -1,0 +1,267 @@
+import numpy as np
+
+speed = open("/Users/raniaalkhazaali/Desktop/HMM/HMM-0/HMM/speed.txt", "r")
+orientation = open("/Users/raniaalkhazaali/Desktop/HMM/HMM-0/HMM/orientation.txt", "r")
+
+speed_s = np.genfromtxt(speed, delimiter='\n', dtype=str)
+orientation_s = np.genfromtxt(orientation, delimiter='\n', dtype=str)
+
+if __name__ == '__main__':
+    de = '/Users/raniaalkhazaali/Desktop/new/'
+def creatfile(path, namee, data,stat):
+    name = namee
+    f = open(path + name, stat)
+    f.write(data)
+    f.close()
+
+
+aij=np.matrix([[0.5,0.5],[0.5,0.5]])
+
+bo=np.matrix([[0.9,0.9,0.9,0.9,0.9],[0.1,0.1,0.1,0.1,0.1]])
+pi1=0.5
+pi2=0.5
+T=5
+t=np.array([1, 2, 3, 4])
+
+#print 'alpha : '+'\n'+ str(alpha)
+
+#print 'beta : '+'\n' + str(beta)
+
+def zet(k, t, m,n):
+    g1=(alpha[m, t] * aij[m, n] * bo[n, t+1] * beta[n, t+1])
+    if k==0 :
+        g2=Poy1
+    else:
+        g2=Poy2
+    return g1/g2
+
+#zeta[0, 0]=(alpha[0, 0]*aij[0, 0]*bo[0, 1]*beta[0, 1])/Poy1
+
+
+
+# # # # # Calculate Transition Probability
+gam = 0
+ze = 0
+ga_up = 0
+ga_do = 0
+
+
+
+for Co in range(80):
+
+
+    # Calculate Alpha
+
+    alpha = np.zeros([2, 5])
+    alpha[0, 0] = pi1 * bo[0, 0]
+    alpha[1, 0] = pi2 * bo[1, 0]
+    for i in range(2):
+        for j in range(1, 5):
+            alpha[i, j] = format(((alpha[i, j - 1] * aij[0, i]) + (alpha[1, j - 1] * aij[1, i])) * bo[i, j], '0.3f')
+
+    # Calculate Beta
+
+    beta = np.zeros([2, 5])
+    beta[0, 4] = 1
+    beta[1, 4] = 1
+
+    for i in range(2):
+        for j in range(3, -1, -1):
+            beta[i, j] = format(
+                (((aij[i, 0] * bo[1, j + 1] * beta[1, j + 1]) + (aij[i, 1] * bo[1, j + 1] * beta[1, j + 1]))), '0.3f')
+
+    # # # # # Calculate Zeta And Gama
+
+    Poy1 = 0
+    Poy2 = 0
+    for i in range(2):
+        for t in range(5):
+            Poy1 += alpha[i, t] * beta[i, t]
+            Poy2 += alpha[i, t] * beta[i, t]
+
+    zeta = np.zeros([2, 5])
+    # Gama m
+
+    gama1 = np.zeros([1, 5])
+    gama2 = np.zeros([1, 5])
+    for k in range(2):
+        for t in range(4):
+            for m in range(2):
+                for n in range(2):
+                    zeta[k, t] = format(zet(k, t, m, n), '0.5f')
+                    if k == 0:
+                        gama1[0, t] = format(zet(k, t, m, 0) + zet(k, t, m, 1), '0.5f')
+                    else:
+                        gama2[0, t] = format(zet(k, t, m, 0) + zet(k, t, m, 1), '0.5f')
+    gamam = gama1 + gama2
+    # Gama n
+    gaman1 = np.zeros([2, 1])
+    gaman2 = np.zeros([2, 1])
+    for k in range(2):
+        for t in range(4):
+            for m in range(2):
+                for n in range(2):
+                    zeta[k, t] = format(zet(k, t, m, n), '0.6f')
+                    if k == 0:
+                        gaman1[k, 0] = format(zet(k, t, m, 0) + zet(k, t, m, 1), '0.6f')
+                    else:
+                        gaman2[k, 0] = format(zet(k, t, m, 0) + zet(k, t, m, 1), '0.6f')
+    gaman = gaman1 + gaman2
+    # Calculate Transition Probability
+
+    for m in range(2):
+        for n in range(2):
+            for k in range(2):
+                for t in range(5):
+                    ze += zeta[k, t]
+                    gam += gamam[0, t]
+            aij[m, n]=ze/gam
+    ggp ="Num:"+ str(Co+1) + '\n'+str(aij) + '\n'+ '\n'
+    creatfile(de, "Transition Probability.txt", ggp, 'a')
+
+    # # # # # Calculate Emission Probability
+
+    for n in range(2):
+        for m in range(5):
+            for k in range(2):
+                for t in range(5):
+                    ga_up += gamam[0, t]
+                    ga_do += gamam[0, k]
+            bo[n, m]=ga_up/ga_do
+    ggb ="Num:"+ str(Co+1) + '\n'+str(bo) + '\n'+ '\n'
+    creatfile(de, "Emission Probability.txt", ggb, 'a')
+
+    # # # # Calculate Initial state Probability
+    pi=np.zeros([2, 1])
+    for k in range(2):
+        D=1/(k+1)
+        pi[k, 0] = gamam[0, k]
+
+    ggg = "Num:" + str(Co + 1) + '\n' + str(pi) + '\n' + '\n'
+    creatfile(de, "Initial state Probability.txt", ggg, 'a')
+
+# ---------------------------------------------------------------------------------------------------Part 1
+
+
+
+
+
+
+
+
+#print 'Transition Probability : '+'\n'+str(aij)
+
+
+pok1=0.0
+pok2=0.0
+mul1=1.0
+mul2=1.0
+for z in range(2):
+    for t in range(4):
+        mul1 = bo[z, t+1]
+    pok1 += pi[z, 0] * bo[0, z]*aij[z, 1]*mul1
+for z in range(2):
+    for t in range(4):
+        mul2 = bo[z, t+1]
+    pok2 += pi[z, 0] * bo[1, z]*aij[z, 1]*mul2
+
+
+pzok1 = np.ones([1, 20])
+pzok2 = np.ones([1, 20])
+ss1=0
+ss2=0
+for p in range(20):
+    for t in range(4):
+        ss1 += (alpha[0, t]*beta[0, t])/pok1
+        ss2 += (alpha[1, t]*beta[1, t])/pok2
+    pzok1[0, p] = ss1
+    pzok2[0, p] = ss2
+    pok1 = pzok1[0, p]
+    pok2 = pzok2[0, p]
+    Pz1 =str(pzok1[0, p])+ '\n'
+    creatfile(de, "Pzok 1 _ for 20 .txt", Pz1, 'a')
+    Pz2 =str(pzok2[0, p]/10)+ '\n'
+    creatfile(de, "Pzok 2 _ for 20 .txt", Pz2, 'a')
+
+
+#  ------------------------------------------------------N1 N2 N3 N4 N5
+N=np.zeros([1, 5])
+poker=5
+for pp in range(20):
+    dd=pzok2[0, pp]
+    if dd < poker:
+        N[0, 0] += 1
+    if dd < poker+1:
+        N[0, 1] += 1
+    if dd < poker+2:
+        N[0, 2] += 1
+    if dd < poker+3:
+        N[0, 3] += 1
+    if dd < poker+4:
+        N[0, 4] += 1
+
+S=np.zeros([1, 5])
+
+for i in range(5):
+    S[0, i] = (N[0, i]/20)
+    SS ="S" + str(i + 1) +" = "+str(S[0, i]) + '\n'
+    creatfile(de, "Si for 20 times .txt", SS, 'a')
+
+for i in range(5):
+    NN ="N" + str(i + 1) +" = "+str(N[0, i]) + '\n'
+    creatfile(de, "Ni for 20 times .txt", NN, 'a')
+
+#  -----------------------------------------------------------------------complete part 2
+
+
+pzok1 = np.ones([1, 100])
+pzok2 = np.ones([1, 100])
+ss1=0
+ss2=0
+for p in range(100):
+    for t in range(4):
+        ss1 += (alpha[0, t]*beta[0, t])/pok1
+        ss2 += (alpha[1, t]*beta[1, t])/pok2
+    pzok1[0, p] = ss1
+    pzok2[0, p] = ss2
+    pok1 = pzok1[0, p]
+    pok2 = pzok2[0, p]
+    Pz1001 = str(pzok1[0, p])+ '\n'
+    creatfile(de, "Pzok 1 _ for 100 .txt", Pz1001, 'a')
+    Pz1002 = str(pzok2[0, p] / 16)+ '\n'
+    creatfile(de, "Pzok 2 _ for 100 .txt", Pz1002, 'a')
+
+
+
+
+#  ------------------------------------------------------N1 N2 N3 N4 N5
+N=np.zeros([1, 5])
+poker=10
+for pp in range(100):
+    dd=pzok2[0, pp]
+    if dd <= poker:
+        N[0, 0] += 1
+    if dd <= poker+1.5:
+        N[0, 1] += 1
+    if dd <= poker+3:
+        N[0, 2] += 1
+    if dd <= poker+4.5:
+        N[0, 3] += 1
+    if dd <= poker+6.5:
+        N[0, 4] += 1
+
+S=np.zeros([1, 5])
+
+for i in range(5):
+    S[0, i] = 1-(N[0, i]/100)
+    SS ="S" + str(i + 1) +" = "+str(S[0, i]) + '\n'
+    creatfile(de, "Si for 100 times .txt", SS, 'a')
+
+for i in range(5):
+    NN ="N" + str(i + 1) +" = "+str(N[0, i]) + '\n'
+    creatfile(de, "Ni for 100 times .txt", NN, 'a')
+
+print '********'+'\n'+'    The Result Has Been Parented    '+'\n'+'********'
+
+
+
